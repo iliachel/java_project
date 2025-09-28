@@ -7,23 +7,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const newTodoInput = document.getElementById('new-todo');
 
     let token = null;
+    const NAMESPACE_URI = "http://todoapp.com/ws";
 
-    const soapRequest = (method, args) => {
-        const body = `
-            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:q0="http://todoapp.com/">
+    const soapRequest = (body) => {
+        const fullBody = `
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ws="${NAMESPACE_URI}">
                 <soapenv:Header/>
                 <soapenv:Body>
-                    <q0:${method}>
-                        ${args}
-                    </q0:${method}>
+                    ${body}
                 </soapenv:Body>
             </soapenv:Envelope>
         `;
 
-        return fetch('/todoservice', {
+        return fetch('/ws', {
             method: 'POST',
             headers: { 'Content-Type': 'text/xml' },
-            body: body
+            body: fullBody
         })
         .then(response => response.text())
         .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"));
@@ -33,13 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
-        const args = `
-            <arg0>${username}</arg0>
-            <arg1>${password}</arg1>
+        const body = `
+            <ws:loginRequest>
+                <ws:username>${username}</ws:username>
+                <ws:password>${password}</ws:password>
+            </ws:loginRequest>
         `;
 
-        soapRequest('login', args).then(data => {
-            token = data.getElementsByTagName('return')[0].textContent;
+        soapRequest(body).then(data => {
+            token = data.getElementsByTagNameNS(NAMESPACE_URI, 'token')[0].textContent;
             if (token) {
                 loginContainer.style.display = 'none';
                 todoContainer.style.display = 'block';
@@ -51,14 +52,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const loadTodos = () => {
-        const args = `<arg0>${token}</arg0>`;
-        soapRequest('getTodos', args).then(data => {
+        const body = `<ws:getTodosRequest><ws:token>${token}</ws:token></ws:getTodosRequest>`;
+        soapRequest(body).then(data => {
             todoList.innerHTML = '';
-            const todos = data.getElementsByTagName('return');
+            const todos = data.getElementsByTagNameNS(NAMESPACE_URI, 'todos');
             for (let item of todos) {
-                const id = item.getElementsByTagName('id')[0].textContent;
-                const task = item.getElementsByTagName('task')[0].textContent;
-                const done = item.getElementsByTagName('done')[0].textContent === 'true';
+                const id = item.getElementsByTagNameNS(NAMESPACE_URI, 'id')[0].textContent;
+                const task = item.getElementsByTagNameNS(NAMESPACE_URI, 'task')[0].textContent;
+                const done = item.getElementsByTagNameNS(NAMESPACE_URI, 'done')[0].textContent === 'true';
                 addTodoToList(id, task, done);
             }
         });
@@ -90,14 +91,17 @@ document.addEventListener('DOMContentLoaded', () => {
     addBtn.addEventListener('click', () => {
         const task = newTodoInput.value;
         if (task) {
-            const args = `
-                <arg0>${token}</arg0>
-                <arg1>${task}</arg1>
+            const body = `
+                <ws:addTodoRequest>
+                    <ws:token>${token}</ws:token>
+                    <ws:task>${task}</ws:task>
+                </ws:addTodoRequest>
             `;
-            soapRequest('addTodo', args).then(data => {
-                const id = data.getElementsByTagName('id')[0].textContent;
-                const task = data.getElementsByTagName('task')[0].textContent;
-                const done = data.getElementsByTagName('done')[0].textContent === 'true';
+            soapRequest(body).then(data => {
+                const todo = data.getElementsByTagNameNS(NAMESPACE_URI, 'todo')[0];
+                const id = todo.getElementsByTagNameNS(NAMESPACE_URI, 'id')[0].textContent;
+                const task = todo.getElementsByTagNameNS(NAMESPACE_URI, 'task')[0].textContent;
+                const done = todo.getElementsByTagNameNS(NAMESPACE_URI, 'done')[0].textContent === 'true';
                 addTodoToList(id, task, done);
                 newTodoInput.value = '';
             });
@@ -105,23 +109,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const updateTodo = (id, task, done) => {
-        const args = `
-            <arg0>${token}</arg0>
-            <arg1>${id}</arg1>
-            <arg2>${task}</arg2>
-            <arg3>${done}</arg3>
+        const body = `
+            <ws:updateTodoRequest>
+                <ws:token>${token}</ws:token>
+                <ws:todo>
+                    <ws:id>${id}</ws:id>
+                    <ws:task>${task}</ws:task>
+                    <ws:done>${done}</ws:done>
+                </ws:todo>
+            </ws:updateTodoRequest>
         `;
-        soapRequest('updateTodo', args).then(() => {
+        soapRequest(body).then(() => {
             loadTodos();
         });
     };
 
     const deleteTodo = (id) => {
-        const args = `
-            <arg0>${token}</arg0>
-            <arg1>${id}</arg1>
+        const body = `
+            <ws:deleteTodoRequest>
+                <ws:token>${token}</ws:token>
+                <ws:id>${id}</ws:id>
+            </ws:deleteTodoRequest>
         `;
-        soapRequest('deleteTodo', args).then(() => {
+        soapRequest(body).then(() => {
             loadTodos();
         });
     };
