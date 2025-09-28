@@ -67,11 +67,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const addTodoToList = (id, task, done) => {
         const li = document.createElement('li');
-        li.textContent = task;
         li.dataset.id = id;
         if (done) {
             li.classList.add('done');
         }
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = done;
+        checkbox.addEventListener('change', () => {
+            updateTodo(id, task, checkbox.checked);
+        });
+
+        const span = document.createElement('span');
+        span.textContent = task;
 
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Delete';
@@ -80,10 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteTodo(id);
         });
 
-        li.addEventListener('click', () => {
-            updateTodo(id, task, !done);
-        });
-
+        li.appendChild(checkbox);
+        li.appendChild(span);
         li.appendChild(deleteBtn);
         todoList.appendChild(li);
     };

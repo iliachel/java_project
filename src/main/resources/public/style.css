@@ -40,11 +40,10 @@ li {
     padding: 10px;
     border-bottom: 1px solid #ccc;
     display: flex;
-    justify-content: space-between;
     align-items: center;
 }
 
-li.done {
+li.done span {
     text-decoration: line-through;
     color: #aaa;
 }
@@ -53,4 +52,12 @@ li button {
     background-color: #dc3545;
     width: auto;
     padding: 5px 10px;
+    margin-left: auto;
+}
+
+li input[type="checkbox"] {
+    display: inline-block;
+    width: auto;
+    margin-bottom: 0;
+    margin-right: 10px;
 }
