@@ -40,8 +40,8 @@ import javax.xml.bind.annotation.XmlType;
     "username",
     "password"
 })
-@XmlRootElement(name = "loginRequest")
-public class LoginRequest {
+@XmlRootElement(name = "registrationRequest")
+public class RegistrationRequest {
 
     @XmlElement(required = true)
     protected String username;

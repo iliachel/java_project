@@ -98,4 +98,20 @@ public class TodoEndpoint {
         }
         return response;
     }
+
+    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "registrationRequest")
+    @ResponsePayload
+    public RegistrationResponse register(@RequestPayload RegistrationRequest request) {
+        RegistrationResponse response = new RegistrationResponse();
+        if (users.containsKey(request.getUsername())) {
+            response.setSuccess(false);
+            response.setMessage("Username already exists");
+        } else {
+            users.put(request.getUsername(), request.getPassword());
+            userTodos.put(request.getUsername(), new ArrayList<>());
+            response.setSuccess(true);
+            response.setMessage("User registered successfully");
+        }
+        return response;
+    }
 }
