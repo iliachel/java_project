@@ -1,7 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     const loginContainer = document.getElementById('login-container');
+    const registrationContainer = document.getElementById('registration-container');
     const todoContainer = document.getElementById('todo-container');
     const loginBtn = document.getElementById('login-btn');
+    const registerBtn = document.getElementById('register-btn');
+    const showRegister = document.getElementById('show-register');
+    const showLogin = document.getElementById('show-login');
+    const logoutBtn = document.getElementById('logout-btn');
     const addBtn = document.getElementById('add-btn');
     const todoList = document.getElementById('todo-list');
     const newTodoInput = document.getElementById('new-todo');
@@ -28,6 +33,26 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"));
     };
 
+    showRegister.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginContainer.style.display = 'none';
+        registrationContainer.style.display = 'block';
+    });
+
+    showLogin.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginContainer.style.display = 'block';
+        registrationContainer.style.display = 'none';
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        token = null;
+        loginContainer.style.display = 'block';
+        todoContainer.style.display = 'none';
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+    });
+
     loginBtn.addEventListener('click', () => {
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
@@ -40,13 +65,43 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         soapRequest(body).then(data => {
-            token = data.getElementsByTagNameNS(NAMESPACE_URI, 'token')[0].textContent;
-            if (token) {
+            const tokenElement = data.getElementsByTagNameNS(NAMESPACE_URI, 'token')[0];
+            if (tokenElement && tokenElement.textContent) {
+                token = tokenElement.textContent;
                 loginContainer.style.display = 'none';
+                registrationContainer.style.display = 'none';
                 todoContainer.style.display = 'block';
                 loadTodos();
             } else {
                 alert('Login failed');
+            }
+        });
+    });
+
+    registerBtn.addEventListener('click', () => {
+        const username = document.getElementById('register-username').value;
+        const password = document.getElementById('register-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+
+        if (password !== confirmPassword) {
+            alert('Passwords do not match');
+            return;
+        }
+
+        const body = `
+            <ws:registrationRequest>
+                <ws:username>${username}</ws:username>
+                <ws:password>${password}</ws:password>
+            </ws:registrationRequest>
+        `;
+
+        soapRequest(body).then(data => {
+            const success = data.getElementsByTagNameNS(NAMESPACE_URI, 'success')[0].textContent === 'true';
+            const message = data.getElementsByTagNameNS(NAMESPACE_URI, 'message')[0].textContent;
+            alert(message);
+            if (success) {
+                loginContainer.style.display = 'block';
+                registrationContainer.style.display = 'none';
             }
         });
     });

@@ -7,10 +7,27 @@ body {
     margin: 0;
 }
 
-#login-container, #todo-container {
+#login-container, #registration-container, #todo-container {
     border: 1px solid #ccc;
     padding: 20px;
     border-radius: 5px;
+    width: 300px;
+}
+
+#login-container p, #registration-container p {
+    text-align: center;
+    margin-top: 15px;
+}
+
+#login-container a, #registration-container a {
+    color: #007bff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#logout-btn {
+    margin-top: 15px;
+    background-color: #6c757d;
 }
 
 input {
