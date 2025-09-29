@@ -18,11 +18,12 @@ public class TodoEndpoint {
 
     private final Map<String, String> users = new HashMap<>();
     private final Map<String, String> sessions = new HashMap<>();
-    private final List<Todo> todos = new ArrayList<>();
+    private final Map<String, List<Todo>> userTodos = new HashMap<>();
     private int nextId = 1;
 
     public TodoEndpoint() {
         users.put("admin", "admin");
+        userTodos.put("admin", new ArrayList<>());
     }
 
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "loginRequest")
@@ -41,8 +42,9 @@ public class TodoEndpoint {
     @ResponsePayload
     public GetTodosResponse getTodos(@RequestPayload GetTodosRequest request) {
         GetTodosResponse response = new GetTodosResponse();
-        if (sessions.containsKey(request.getToken())) {
-            response.getTodos().addAll(todos);
+        String username = sessions.get(request.getToken());
+        if (username != null) {
+            response.getTodos().addAll(userTodos.get(username));
         }
         return response;
     }
@@ -51,12 +53,13 @@ public class TodoEndpoint {
     @ResponsePayload
     public AddTodoResponse addTodo(@RequestPayload AddTodoRequest request) {
         AddTodoResponse response = new AddTodoResponse();
-        if (sessions.containsKey(request.getToken())) {
+        String username = sessions.get(request.getToken());
+        if (username != null) {
             Todo todo = new Todo();
             todo.setId(nextId++);
             todo.setTask(request.getTask());
             todo.setDone(false);
-            todos.add(todo);
+            userTodos.get(username).add(todo);
             response.setTodo(todo);
         }
         return response;
@@ -66,7 +69,9 @@ public class TodoEndpoint {
     @ResponsePayload
     public UpdateTodoResponse updateTodo(@RequestPayload UpdateTodoRequest request) {
         UpdateTodoResponse response = new UpdateTodoResponse();
-        if (sessions.containsKey(request.getToken())) {
+        String username = sessions.get(request.getToken());
+        if (username != null) {
+            List<Todo> todos = userTodos.get(username);
             for (Todo todo : todos) {
                 if (todo.getId() == request.getTodo().getId()) {
                     todo.setTask(request.getTodo().getTask());
@@ -83,7 +88,9 @@ public class TodoEndpoint {
     @ResponsePayload
     public DeleteTodoResponse deleteTodo(@RequestPayload DeleteTodoRequest request) {
         DeleteTodoResponse response = new DeleteTodoResponse();
-        if (sessions.containsKey(request.getToken())) {
+        String username = sessions.get(request.getToken());
+        if (username != null) {
+            List<Todo> todos = userTodos.get(username);
             boolean removed = todos.removeIf(todo -> todo.getId() == request.getId());
             response.setSuccess(removed);
         } else {
